@@ -2,23 +2,66 @@
   <div class="login_container">
     <div class="login_box">
       <div class="avatar_box"><img src="../assets/logo.png"></div>
-      <el-form class="login_form">
-        <el-form-item>
-          <el-input  prefix-icon="iconfont icon-user"></el-input>
+      <el-form class="login_form" :model="loginForm" :rules="loginFormRule" ref="loginFormRef">
+        <el-form-item prop="username">
+          <el-input  prefix-icon="iconfont icon-user" v-model="loginForm.username"></el-input>
         </el-form-item>
-         <el-form-item>
-          <el-input  prefix-icon="iconfont icon-3702mima"></el-input>
+         <el-form-item prop="password">
+          <el-input  prefix-icon="iconfont icon-3702mima" v-model="loginForm.password" type="password"></el-input>
         </el-form-item>
          <el-form-item class="btns">
-          <el-button type="primary">登录</el-button>
-          <el-button type="info">重置</el-button>
+          <el-button type="primary" @click="login">登录</el-button>
+          <el-button type="info" @click="restLoginForm">重置</el-button>
         </el-form-item>
       </el-form>
     </div>
   </div>
 </template>
 <script>
-export default {}
+export default {
+  data() {
+    return {
+      loginForm: {
+        username: 'admin',
+        password: '123456'
+      },
+      loginFormRule: {
+        username: [
+          { required: true, message: '请输入登录名称', trigger: 'blur' },
+          { min: 3, max: 15, message: '长度在 3 到 15 个字符', trigger: 'blur' }
+        ],
+        password: [
+          { required: true, message: '请输入登录密码', trigger: 'blur' },
+          { min: 6, max: 15, message: '长度在 6 到 15 个字符', trigger: 'blur' }
+        ]
+      }
+    }
+  },
+  methods: {
+    login() {
+      this.$refs.loginFormRef.validate(async valid => {
+        if (valid) {
+          const { data: res } = await this.$http.post('login', this.loginForm)
+          if (res.meta.status === 200) {
+            this.$message({
+              message: '登录成功',
+              type: 'success'
+            })
+            window.sessionStorage.setItem('token', res.data.token)
+            this.$router.push('/home')
+          } else {
+            this.$message.error('登陆失败')
+          }
+        } else {
+          return false
+        }
+      })
+    },
+    restLoginForm() {
+      this.$refs.loginFormRef.resetFields()
+    }
+  }
+}
 </script>
 <style lang="less" scoped>
 .login_container {
@@ -56,12 +99,12 @@ export default {}
     }
   }
 
-  .btns{
+  .btns {
     display: flex;
     justify-content: flex-end;
   }
 
-  .login_form{
+  .login_form {
     position: absolute;
     bottom: 0;
     width: 100%;
